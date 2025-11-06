@@ -1,0 +1,64 @@
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ] # Dispara a action em todo push para a 'main'
+
+jobs:
+  # --- JOB 1: BUILD & PUSH (CI) ---
+  build-and-push-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código da app
+        uses: actions/checkout@v3
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build e Push para Docker Hub
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          # A tag da imagem será o usuário + o hash do commit (ex: usuario/hello-app:a1b2c3d)
+          tags: ${{ secrets.DOCKER_USERNAME }}/hello-app:${{ github.sha }}
+
+  # --- JOB 2: UPDATE MANIFESTS (CD/GitOps) ---
+  update-manifests:
+    runs-on: ubuntu-latest
+    needs: build-and-push-docker # Só roda se o Job 1 for um sucesso
+
+    steps:
+      - name: Configurar SSH para Git
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Checkout repositório de manifestos
+        uses: actions/checkout@v3
+        with:
+          # ATENÇÃO: Substitua <SEU-USUARIO> aqui!
+          repository: AykenCastro/hello-manifests
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }} # Usa a chave para autenticar
+          path: manifests # Baixa para uma pasta 'manifests'
+
+      - name: Atualizar a tag da imagem no deployment.yaml
+        run: |
+          # Encontra a linha 'image:' e substitui a tag pela nova (hash do commit)
+          sed -i 's|image:.*|image: ${{ secrets.DOCKER_USERNAME }}/hello-app:${{ github.sha }}|' manifests/deployment.yaml
+      
+      - name: Fazer commit e push da mudança
+        run: |
+          cd manifests
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "bot@github.com"
+          git commit -am "Atualiza tag da imagem para ${{ github.sha }}"
+          git push
