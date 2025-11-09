@@ -424,6 +424,8 @@ curl http://localhost:8080
 ```
 
 Deve retornar: `{"message": "Meu pipeline de CI/CD funcionou!"}`
+<img width="529" height="154" alt="print 7" src="https://github.com/user-attachments/assets/0a72efc2-36ed-428b-a88a-63ac3347b0a3" />
+
 
 ## 🛠️ Solução de Problemas Comuns
 
