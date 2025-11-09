@@ -408,12 +408,18 @@ git push origin main
 1. **📊 GitHub Actions**: 
    - Vá em `hello-app` → **Actions**
    - Observe o pipeline em execução
+   <img width="1919" height="477" alt="print 4" src="https://github.com/user-attachments/assets/c9ced5c2-2e78-4835-b3b9-7149edfb874b" />
+
 
 2. **🐳 Docker Hub**:
    - Verifique se uma nova imagem foi criada com o hash do commit
+   <img width="1920" height="783" alt="print 17" src="https://github.com/user-attachments/assets/f88a0efe-eaad-4c9c-84ad-10851e639a6c" />
+
 
 3. **📁 Repositório hello-manifests**:
    - Vá em **Commits** - deve haver um commit do "GitHub Action Bot"
+   <img width="1660" height="602" alt="print 19" src="https://github.com/user-attachments/assets/b47e0670-6c9b-43d9-92db-0ed16cf1d4ff" />
+
 
 4. **🔄 ArgoCD**:
    - A aplicação será atualizada automaticamente (se configurado como Automatic)
