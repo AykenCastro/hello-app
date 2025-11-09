@@ -365,7 +365,7 @@ Acesse: https://localhost:8080
 
 ```bash
 # Fazer port-forward para o serviço
-kubectl port-forward service/hello-app-service 8080:8080
+kubectl port-forward service/hello-app-service 8081:8080
 ```
 
 Acesse http://localhost:8081 no navegador ou use:
