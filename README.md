@@ -452,6 +452,7 @@ Deve retornar: `{"message": "Meu pipeline de CI/CD funcionou!"}`
 ```bash
 # Verificar pods
 kubectl get pods
+<img width="646" height="339" alt="print 23" src="https://github.com/user-attachments/assets/929b58ca-3eb0-4861-a23d-83682927f279" />
 
 # Verificar logs do pod
 kubectl logs <nome-do-pod>
