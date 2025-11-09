@@ -375,6 +375,8 @@ curl http://localhost:8081
 ```
 
 Deve retornar: `{"message": "Hello World"}`
+<img width="519" height="155" alt="print 3" src="https://github.com/user-attachments/assets/b541cb3e-be0a-4e80-9e02-4397165c3780" />
+
 
 ### 6.2 Testar o Loop de CI/CD
 
