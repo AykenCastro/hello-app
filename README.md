@@ -1,13 +1,80 @@
-Tutorial: CI/CD com GitHub Actions e ArgoCDEste guia irá ajudá-lo a criar um pipeline completo onde:CI (Integração Contínua): Você envia um código Python (push) para um repositório. O GitHub Actions automaticamente testa, constrói uma imagem Docker e a envia para o Docker Hub.CD (Entrega Contínua): O mesmo GitHub Action, em seguida, atualiza um segundo repositório (de manifestos) com a nova tag da imagem. O ArgoCD detecta essa mudança e atualiza automaticamente a aplicação no seu Rancher Desktop.Visão Geral da Estratégia: Dois RepositóriosEste projeto exige dois repositórios Git públicos:hello-app (Repositório da Aplicação): Contém o código Python (main.py) e o Dockerfile.hello-manifests (Repositório de Manifestos): Contém os arquivos YAML do Kubernetes (deployment.yaml, service.yaml) que o ArgoCD irá monitorar.Etapa 1: Criar o Repositório 1 (hello-app)Este repositório conterá seu código-fonte.1. Crie e CloneNo GitHub, crie um novo repositório público chamado hello-app. Clone-o para o seu computador:git clone [https://github.com/](https://github.com/)<SEU-USUARIO>/hello-app.git
+# Tutorial Completo: CI/CD com GitHub Actions e ArgoCD
+
+Este tutorial guiará você na criação de um pipeline completo de CI/CD (Integração Contínua e Entrega Contínua) utilizando GitHub Actions e ArgoCD.
+
+## 📋 Visão Geral
+
+### Arquitetura do Sistema
+
+O projeto utiliza uma estratégia de **dois repositórios**:
+
+- **🚀 hello-app**: Repositório da aplicação (código fonte)
+- **📁 hello-manifests**: Repositório de manifestos Kubernetes (configurações de deploy)
+
+### Fluxo do Pipeline
+
+1. **CI (Integração Contínua)**: Push no código → GitHub Actions testa, constrói imagem Docker e envia para Docker Hub
+2. **CD (Entrega Contínua)**: GitHub Actions atualiza manifestos → ArgoCD detecta mudanças → Aplicação é atualizada no cluster Kubernetes
+
+## ⚙️ Pré-requisitos
+
+- ✅ Conta no [GitHub](https://github.com)
+- ✅ Conta no [Docker Hub](https://hub.docker.com)
+- ✅ [Rancher Desktop](https://rancherdesktop.io/) instalado (ou outro cluster Kubernetes)
+- ✅ [ArgoCD](https://argo-cd.readthedocs.io/) instalado no cluster
+- ✅ Conhecimento básico de Git, Docker e Kubernetes
+
+## 🏗️ Estrutura dos Repositórios
+
+### Repositório 1: hello-app (Aplicação)
+```
+hello-app/
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml
+├── main.py
+├── Dockerfile
+└── requirements.txt
+```
+
+### Repositório 2: hello-manifests (Manifestos Kubernetes)
+```
+hello-manifests/
+├── deployment.yaml
+└── service.yaml
+```
+
+## 📝 Etapa 1: Criar o Repositório da Aplicação (hello-app)
+
+### 1.1 Criar e Clonar o Repositório
+
+```bash
+# No GitHub, crie um novo repositório público chamado "hello-app"
+git clone https://github.com/<SEU-USUARIO>/hello-app.git
 cd hello-app
-2. Crie o main.pyCrie este arquivo com o código FastAPI:# main.py
+```
+
+### 1.2 Criar o Arquivo da Aplicação
+
+Crie o arquivo `main.py`:
+
+```python
+# main.py
 from fastapi import FastAPI
+
 app = FastAPI()
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-3. Crie o DockerfileCrie um arquivo chamado Dockerfile (sem extensão) com este conteúdo:# Dockerfile
+```
+
+### 1.3 Criar o Dockerfile
+
+Crie o arquivo `Dockerfile` (sem extensão):
+
+```dockerfile
+# Dockerfile
 
 # 1. Base Image
 FROM python:3.9-slim
@@ -16,7 +83,6 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # 3. Install dependencies
-# (Nota: O 'requirements.txt' é copiado primeiro para aproveitar o cache do Docker)
 COPY requirements.txt .
 RUN pip install fastapi uvicorn
 
@@ -26,14 +92,40 @@ COPY . .
 # 5. Expose port and run
 EXPOSE 80
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
-4. Crie o requirements.txtCrie um arquivo requirements.txt (pode estar vazio por enquanto, apenas para o COPY no Dockerfile funcionar). O RUN já instala o fastapi e uvicorn.touch requirements.txt
-5. Envie para o GitHubgit add .
+```
+
+### 1.4 Criar requirements.txt
+
+Crie um arquivo `requirements.txt` vazio (por enquanto):
+
+```txt
+# Arquivo vazio - as dependências são instaladas diretamente no Dockerfile
+```
+
+### 1.5 Primeiro Commit
+
+```bash
+git add .
 git commit -m "Versão inicial da hello-app"
 git push origin main
-Etapa 2: Criar o Repositório 2 (hello-manifests)Este repositório conterá seus manifestos do Kubernetes. O ArgoCD irá monitorá-lo.1. Crie e CloneNo GitHub, crie um novo repositório público chamado hello-manifests. Clone-o para outro local no seu computador.# Em uma pasta DIFERENTE da 'hello-app'
-git clone [https://github.com/](https://github.com/)<SEU-USUARIO>/hello-manifests.git
+```
+
+## 📝 Etapa 2: Criar o Repositório de Manifestos (hello-manifests)
+
+### 2.1 Criar e Clonar o Repositório
+
+```bash
+# Em uma pasta DIFERENTE da 'hello-app'
+git clone https://github.com/<SEU-USUARIO>/hello-manifests.git
 cd hello-manifests
-2. Crie o deployment.yamlCrie este arquivo. Ele define como rodar sua aplicação.Importante: Substitua <SEU-DOCKERHUB-USERNAME> pelo seu nome de usuário do Docker Hub.# deployment.yaml
+```
+
+### 2.2 Criar deployment.yaml
+
+Crie o arquivo `deployment.yaml`:
+
+```yaml
+# deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -50,12 +142,18 @@ spec:
     spec:
       containers:
       - name: hello-app
-        # ATENÇÃO: Coloque seu usuário do Docker Hub aqui!
-        # O 'initial' será substituído pela GitHub Action
+        # ATENÇÃO: Substitua <SEU-DOCKERHUB-USERNAME> pelo seu usuário!
         image: <SEU-DOCKERHUB-USERNAME>/hello-app:initial
         ports:
         - containerPort: 80
-3. Crie o service.yamlCrie este arquivo. Ele expõe seu Deployment dentro do cluster.# service.yaml
+```
+
+### 2.3 Criar service.yaml
+
+Crie o arquivo `service.yaml`:
+
+```yaml
+# service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -63,22 +161,91 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: hello-app # Deve bater com o label do Deployment
+    app: hello-app
   ports:
-  - port: 8080 # Porta que o Service expõe
-    targetPort: 80 # Porta que o contêiner escuta (do Dockerfile)
-4. Envie para o GitHubgit add .
+  - port: 8080
+    targetPort: 80
+```
+
+### 2.4 Primeiro Commit dos Manifestos
+
+```bash
+git add .
 git commit -m "Manifestos iniciais da hello-app"
 git push origin main
-Etapa 3: Configurar os Segredos (GitHub Secrets)O seu GitHub Action (no repositório hello-app) precisará de permissões para:Fazer login no Docker Hub.Fazer um "push" (commit) no repositório hello-manifests.Vá para hello-app -> Settings -> Secrets and variables -> Actions e crie:1. Segredos do Docker HubDOCKER_USERNAME: Seu nome de usuário do Docker Hub.DOCKER_PASSWORD: Não é sua senha. Vá ao Docker Hub -> Account Settings -> Security -> New Access Token. Crie um token e cole o valor aqui.2. Segredo de Deploy (SSH Key)Este é o passo mais complexo, pois permite que um repositório (app) escreva em outro (manifestos).a. Gere um par de chaves:No seu terminal local, rode:# -f deploy_key: Salva o par como 'deploy_key' e 'deploy_key.pub'
-# -N "": Deixa a senha da chave em branco
+```
+
+## 🔐 Etapa 3: Configurar Segredos no GitHub
+
+### 3.1 Acessar Configurações de Segredos
+
+No repositório `hello-app` no GitHub:
+- Vá em **Settings** → **Secrets and variables** → **Actions**
+- Clique em **New repository secret**
+
+### 3.2 Configurar Segredos do Docker Hub
+
+#### DOCKER_USERNAME
+- **Name**: `DOCKER_USERNAME`
+- **Secret**: Seu nome de usuário do Docker Hub
+
+#### DOCKER_PASSWORD
+- **Name**: `DOCKER_PASSWORD`
+- **Secret**: Crie um access token no Docker Hub:
+  1. Acesse [Docker Hub](https://hub.docker.com)
+  2. Vá em **Account Settings** → **Security** → **New Access Token**
+  3. Crie um token e use-o como senha
+
+### 3.3 Configurar Chave SSH para Deploy
+
+#### 3.3.1 Gerar Par de Chaves SSH
+
+```bash
 ssh-keygen -t rsa -b 4096 -C "github-action-deploy" -f deploy_key -N ""
-b. Adicione a Chave Pública (Deploy Key) aos hello-manifests:Vá para o repositório hello-manifests -> Settings -> Deploy keys -> Add deploy key.Title: GitHub ActionKey: Copie e cole o conteúdo do arquivo deploy_key.pub (a chave pública).MARQUE A CAIXA: Allow write access.c. Adicione a Chave Privada (Secret) ao hello-app:Vá para o repositório hello-app -> Settings -> Secrets and variables -> Actions.Crie um novo segredo:Name: SSH_PRIVATE_KEYValue: Copie e cole o conteúdo do arquivo deploy_key (a chave privada).Etapa 4: Criar o GitHub Action (O Pipeline de CI/CD)No seu repositório hello-app, crie a pasta .github/workflows e, dentro dela, o arquivo ci-cd.yml.# .github/workflows/ci-cd.yml
+```
+
+Isso criará dois arquivos:
+- `deploy_key` (chave privada)
+- `deploy_key.pub` (chave pública)
+
+#### 3.3.2 Adicionar Chave Pública como Deploy Key
+
+No repositório `hello-manifests`:
+- Vá em **Settings** → **Deploy keys** → **Add deploy key**
+- **Title**: `GitHub Action`
+- **Key**: Cole o conteúdo do arquivo `deploy_key.pub`
+- **✓ Marque**: *Allow write access*
+- Clique em **Add key**
+
+#### 3.3.3 Adicionar Chave Privada como Secret
+
+No repositório `hello-app`:
+- Vá em **Settings** → **Secrets and variables** → **Actions**
+- **New repository secret**:
+  - **Name**: `SSH_PRIVATE_KEY`
+  - **Secret**: Cole o conteúdo do arquivo `deploy_key`
+
+## ⚡ Etapa 4: Criar o GitHub Action
+
+### 4.1 Estrutura de Diretórios
+
+No repositório `hello-app`, crie a estrutura:
+
+```bash
+mkdir -p .github/workflows
+```
+
+### 4.2 Criar Arquivo do Workflow
+
+Crie o arquivo `.github/workflows/ci-cd.yml`:
+
+```yaml
+# .github/workflows/ci-cd.yml
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ] # Dispara a action em todo push para a 'main'
+    branches: [ main ]
 
 jobs:
   # --- JOB 1: BUILD & PUSH (CI) ---
@@ -103,13 +270,12 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          # A tag da imagem será o usuário + o hash do commit (ex: usuario/hello-app:a1b2c3d)
           tags: ${{ secrets.DOCKER_USERNAME }}/hello-app:${{ github.sha }}
 
   # --- JOB 2: UPDATE MANIFESTS (CD/GitOps) ---
   update-manifests:
     runs-on: ubuntu-latest
-    needs: build-and-push-docker # Só roda se o Job 1 for um sucesso
+    needs: build-and-push-docker
 
     steps:
       - name: Configurar SSH para Git
@@ -120,14 +286,13 @@ jobs:
       - name: Checkout repositório de manifestos
         uses: actions/checkout@v3
         with:
-          # ATENÇÃO: Substitua <SEU-USUARIO> aqui!
+          # ATENÇÃO: Substitua <SEU-USUARIO> pelo seu usuário GitHub!
           repository: <SEU-USUARIO>/hello-manifests
-          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }} # Usa a chave para autenticar
-          path: manifests # Baixa para uma pasta 'manifests'
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          path: manifests
 
       - name: Atualizar a tag da imagem no deployment.yaml
         run: |
-          # Encontra a linha 'image:' e substitui a tag pela nova (hash do commit)
           sed -i 's|image:.*|image: ${{ secrets.DOCKER_USERNAME }}/hello-app:${{ github.sha }}|' manifests/deployment.yaml
       
       - name: Fazer commit e push da mudança
@@ -137,16 +302,193 @@ jobs:
           git config --global user.email "bot@github.com"
           git commit -am "Atualiza tag da imagem para ${{ github.sha }}"
           git push
-Importante: Substitua <SEU-USUARIO> no arquivo YAML acima. Após criar este arquivo, envie-o para o hello-app:# No diretório 'hello-app'
+```
+
+**Importante**: Substitua `<SEU-USUARIO>` pelo seu nome de usuário do GitHub.
+
+### 4.3 Commit do Workflow
+
+```bash
 git add .github/workflows/ci-cd.yml
 git commit -m "Adiciona pipeline de CI/CD"
 git push origin main
-Este push irá disparar o primeiro pipeline! Você pode assistir em hello-app -> Actions.Etapa 5: Criar o App no ArgoCDEsta etapa conecta seu cluster ao repositório de manifestos.Acesse seu ArgoCD.Clique em "+ NEW APP".Preencha:Application Name: hello-appProject Name: defaultSync Policy: Automatic (ou Manual, se preferir)Repository URL: https://github.com/<SEU-USUARIO>/hello-manifests.git (Aponte para o repositório de manifestos!)Path: . (o diretório raiz)Cluster URL: https://kubernetes.default.svcNamespace: defaultClique em "CREATE" e depois em "SYNC".O ArgoCD irá ler seu hello-manifests, encontrar o deployment.yaml (que já foi atualizado pela Action) e implantar a aplicação no seu Rancher Desktop.Etapa 6: Acessar e Testar o Loop CompletoTeste 1: Acessar a AplicaçãoNo seu terminal, faça o port-forward para o novo serviço que criamos (o service.yaml usa a porta 8080):kubectl port-forward service/hello-app-service 8080:8080
-Acesse http://localhost:8080 no seu navegador ou use curl.Você deve ver a mensagem original: {"message": "Hello World"}.Teste 2: O Loop de CI/CDAgora, vamos testar se a automação funciona.No seu computador, vá para a pasta hello-app.Abra o main.py e altere a mensagem:# main.py
-...
+```
+
+**🎉 Este push irá disparar o primeiro pipeline!**
+
+## 🔄 Etapa 5: Configurar o ArgoCD
+
+### 5.1 Acessar o ArgoCD
+
+Se o ArgoCD estiver rodando localmente:
+
+```bash
+kubectl port-forward -n argocd svc/argocd-server 8080:443
+```
+
+Acesse: https://localhost:8080
+
+### 5.2 Criar Nova Aplicação
+
+1. Clique em **"+ NEW APP"**
+2. Preencha os campos:
+
+**GENERAL**:
+- **Application Name**: `hello-app`
+- **Project Name**: `default`
+- **Sync Policy**: `Automatic`
+
+**SOURCE**:
+- **Repository URL**: `https://github.com/<SEU-USUARIO>/hello-manifests.git`
+- **Path**: `.`
+
+**DESTINATION**:
+- **Cluster URL**: `https://kubernetes.default.svc`
+- **Namespace**: `default`
+
+3. Clique em **CREATE**
+
+### 5.3 Sincronizar Aplicação
+
+- Na lista de aplicações, clique em `hello-app`
+- Clique em **SYNC**
+- Confirme a sincronização
+
+## 🧪 Etapa 6: Testar o Pipeline Completo
+
+### 6.1 Teste Inicial da Aplicação
+
+```bash
+# Fazer port-forward para o serviço
+kubectl port-forward service/hello-app-service 8080:8080
+```
+
+Acesse http://localhost:8080 no navegador ou use:
+
+```bash
+curl http://localhost:8080
+```
+
+Deve retornar: `{"message": "Hello World"}`
+
+### 6.2 Testar o Loop de CI/CD
+
+#### Modificar o Código
+
+Edite `main.py` no repositório `hello-app`:
+
+```python
+# main.py
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
 async def root():
     return {"message": "Meu pipeline de CI/CD funcionou!"}
-Faça o commit e push:git add main.py
+```
+
+#### Fazer Commit e Push
+
+```bash
+git add main.py
 git commit -m "Testando o pipeline"
 git push origin main
-Observe a Mágica:GitHub Actions: Vá para hello-app -> Actions. Você verá um novo pipeline "Testando o pipeline" em execução. Espere ele terminar (o Job 1 e o Job 2).Docker Hub: Verifique seu repositório de imagens. Uma nova tag com o hash do último commit terá aparecido.Git (Manifests): Vá para hello-manifests -> Commits. Você verá um novo commit do "GitHub Action Bot" atualizando a tag da imagem no deployment.yaml.ArgoCD: Vá para o ArgoCD. O app hello-app ficará OutOfSync (ou se atualizará sozinho se você escolheu Automatic). Sincronize-o, se necessário.Verificação Final: Atualize http://localhost:8080 no seu navegador. A mensagem deve mudar para: {"message": "Meu pipeline de CI/CD funcionou!"}.Parabéns! Você acabou de completar um ciclo de desenvolvimento, build e deploy totalmente automatizado.
+```
+
+### 6.3 Monitorar o Processo
+
+1. **📊 GitHub Actions**: 
+   - Vá em `hello-app` → **Actions**
+   - Observe o pipeline em execução
+
+2. **🐳 Docker Hub**:
+   - Verifique se uma nova imagem foi criada com o hash do commit
+
+3. **📁 Repositório hello-manifests**:
+   - Vá em **Commits** - deve haver um commit do "GitHub Action Bot"
+
+4. **🔄 ArgoCD**:
+   - A aplicação será atualizada automaticamente (se configurado como Automatic)
+
+### 6.4 Verificação Final
+
+```bash
+# Acessar a aplicação atualizada
+curl http://localhost:8080
+```
+
+Deve retornar: `{"message": "Meu pipeline de CI/CD funcionou!"}`
+
+## 🛠️ Solução de Problemas Comuns
+
+### ❌ Pipeline Falha no Build
+
+- Verifique se o Dockerfile está correto
+- Confirme que os segredos do Docker Hub estão configurados corretamente
+
+### ❌ Erro de Permissão SSH
+
+- Verifique se a deploy key tem permissão de escrita
+- Confirme que a chave privada foi copiada completamente (sem quebras de linha)
+
+### ❌ ArgoCD Não Sincroniza
+
+- Verifique a URL do repositório nos manifestos
+- Confirme que o path está correto (`.` para raiz)
+- Verifique os logs do ArgoCD
+
+### ❌ Aplicação Não Responde
+
+```bash
+# Verificar pods
+kubectl get pods
+
+# Verificar logs do pod
+kubectl logs <nome-do-pod>
+
+# Verificar serviços
+kubectl get services
+```
+
+## 📊 Estrutura Final do Projeto
+
+### Repositório hello-app
+```
+hello-app/
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml
+├── main.py
+├── Dockerfile
+└── requirements.txt
+```
+
+### Repositório hello-manifests
+```
+hello-manifests/
+├── deployment.yaml
+└── service.yaml
+```
+
+## 🎯 Conclusão
+
+Você implementou com sucesso um pipeline completo de CI/CD usando:
+
+- **✅ GitHub Actions** para integração contínua
+- **✅ Docker** para containerização
+- **✅ ArgoCD** para GitOps e deployment automatizado
+- **✅ Kubernetes** para orquestração de containers
+
+Este pipeline automatiza todo o processo desde o commit de código até o deployment em produção, seguindo as melhores práticas de DevOps e GitOps.
+
+---
+
+## 📞 Suporte
+
+Se encontrar problemas:
+1. Verifique todos os pré-requisitos
+2. Confirme que todos os segredos estão configurados corretamente
+3. Consulte a documentação oficial de cada ferramenta
+
+**🎊 Parabéns! Seu pipeline de CI/CD está funcionando!**
