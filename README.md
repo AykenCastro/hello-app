@@ -347,6 +347,9 @@ Acesse: https://localhost:8080
 - **Namespace**: `default`
 
 3. Clique em **CREATE**
+<img width="1920" height="944" alt="print 8" src="https://github.com/user-attachments/assets/ae0467d6-b2d1-4267-a11b-56731ef592c7" />
+<img width="1919" height="964" alt="print 9" src="https://github.com/user-attachments/assets/100bffee-5b73-4d7c-a30c-01e345a58874" />
+
 
 ### 5.3 Sincronizar Aplicação
 
