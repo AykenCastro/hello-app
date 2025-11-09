@@ -323,7 +323,7 @@ git push origin main
 Se o ArgoCD estiver rodando localmente:
 
 ```bash
-kubectl port-forward -n argocd svc/argocd-server 8080:443
+ port-forward -n argocd svc/argocd-server 8080:443
 ```
 
 Acesse: https://localhost:8080
@@ -365,7 +365,7 @@ Acesse: https://localhost:8080
 
 ```bash
 # Fazer port-forward para o serviço
-kubectl port-forward service/hello-app-service 8081:8080
+ port-forward service/hello-app-service 8081:8080
 ```
 
 Acesse http://localhost:8081 no navegador ou use:
@@ -452,7 +452,6 @@ Deve retornar: `{"message": "Meu pipeline de CI/CD funcionou!"}`
 ```bash
 # Verificar pods
 kubectl get pods
-<img width="646" height="339" alt="print 23" src="https://github.com/user-attachments/assets/929b58ca-3eb0-4861-a23d-83682927f279" />
 
 # Verificar logs do pod
 kubectl logs <nome-do-pod>
@@ -460,6 +459,7 @@ kubectl logs <nome-do-pod>
 # Verificar serviços
 kubectl get services
 ```
+<img width="646" height="339" alt="print 23" src="https://github.com/user-attachments/assets/2a512714-fc7b-41f6-b507-10eee7096e60" />
 
 ## 📊 Estrutura Final do Projeto
 
