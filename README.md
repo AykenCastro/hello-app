@@ -357,6 +357,8 @@ Acesse: https://localhost:8080
 - Clique em **SYNC**
 - Confirme a sincronização
 <img width="1920" height="953" alt="print 21" src="https://github.com/user-attachments/assets/4f7421d6-ee93-4c42-8f02-cdf323d87d98" />
+<img width="1920" height="911" alt="print 2" src="https://github.com/user-attachments/assets/49a78421-9dbd-4fe5-a961-544c9cdaffcf" />
+
 
 
 ## 🧪 Etapa 6: Testar o Pipeline Completo
