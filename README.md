@@ -1,4 +1,4 @@
-# Tutorial Completo: CI/CD com GitHub Actions e ArgoCD
+# Projeto com Tutorial Completo: CI/CD com GitHub Actions e ArgoCD
 
 Este tutorial guiará você na criação de um pipeline completo de CI/CD (Integração Contínua e Entrega Contínua) utilizando GitHub Actions e ArgoCD.
 
