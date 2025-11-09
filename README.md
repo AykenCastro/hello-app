@@ -356,6 +356,8 @@ Acesse: https://localhost:8080
 - Na lista de aplicações, clique em `hello-app`
 - Clique em **SYNC**
 - Confirme a sincronização
+<img width="1920" height="953" alt="print 21" src="https://github.com/user-attachments/assets/4f7421d6-ee93-4c42-8f02-cdf323d87d98" />
+
 
 ## 🧪 Etapa 6: Testar o Pipeline Completo
 
