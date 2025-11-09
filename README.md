@@ -368,10 +368,10 @@ Acesse: https://localhost:8080
 kubectl port-forward service/hello-app-service 8080:8080
 ```
 
-Acesse http://localhost:8080 no navegador ou use:
+Acesse http://localhost:8081 no navegador ou use:
 
 ```bash
-curl http://localhost:8080
+curl http://localhost:8081
 ```
 
 Deve retornar: `{"message": "Hello World"}`
@@ -420,7 +420,7 @@ git push origin main
 
 ```bash
 # Acessar a aplicação atualizada
-curl http://localhost:8080
+curl http://localhost:8081
 ```
 
 Deve retornar: `{"message": "Meu pipeline de CI/CD funcionou!"}`
